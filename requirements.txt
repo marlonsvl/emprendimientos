@@ -18,3 +18,4 @@ pandas
 openpyxl
 python-decouple==3.8
 legacy-cgi==2.6.4
+djoser
