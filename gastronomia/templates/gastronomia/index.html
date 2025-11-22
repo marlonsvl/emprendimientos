@@ -1,0 +1,35 @@
+{% extends "gastronomia/layout.html" %}
+{% block body %}
+<div class="section-title">
+    <h2>Establecimientos</h2>
+  </div>
+    <div class="d-flex flex-wrap justify-content-around">
+            {% if lista %}
+            
+                {% for e in lista %}
+                <a href="" class="text-decoration-none pb-4" style="color:black;">
+                    <div class="card shadow-lg border-0 rounded-0 m-2" style="width:28rem;height:100%;overflow:hidden;" data-aos="zoom-in" data-aos-delay="100">
+                        <img src=""  alt="{{ e.nombre }}" title="{{ e.nombre }}" class="card-img-top" style="border-radius:0;"> 
+                        <div class="card-body mx-auto">
+                            <h3 class="text-center ">{{ e.nombre }}</h3>
+                            <p class="lead text-center"><strong>Parroquia: </strong>    {{ e.parroquia}} </p>
+                            <p class="lead text-center"><strong>Sector: </strong>    {{ e.sector}} </p>
+                            <p class="lead text-center"><strong>Telefono: </strong>    {{ e.telefono}} </p>
+                            <p class="lead text-center"><strong>Email: </strong>    {{ e.email}} </p>
+                            <p class="lead text-center"> {{ e.menu}} </p>
+                            <p class="figure-caption text-center ">Tipo: {{ e.tipo}}</p>
+                            
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                No establishments.
+            {% endif %}
+            
+    </div>
+        
+{% endblock %}
+
+
+      

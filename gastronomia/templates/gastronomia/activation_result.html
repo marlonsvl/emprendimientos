@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Account Activation</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center vh-100">
+  <div class="card shadow-lg p-4 text-center" style="max-width: 400px;">
+    {% if status == 'success' %}
+      <h3 class="text-success mb-3">🎉 Account Activated!</h3>
+      <p>Your account is now active. You can log in using your credentials.</p>
+      <a href="/" class="btn btn-success mt-3">Go to Home</a>
+    {% else %}
+      <h3 class="text-danger mb-3">Activation Failed</h3>
+      <p>Sorry, we couldn’t activate your account. It may already be activated or the link expired.</p>
+      <small class="text-muted">{{ detail }}</small>
+      <a href="/" class="btn btn-secondary mt-3">Go Back</a>
+    {% endif %}
+  </div>
+</body>
+</html>

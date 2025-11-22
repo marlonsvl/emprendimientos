@@ -1,0 +1,22 @@
+{% extends "gastronomia/layout.html" %}
+{% block body %}
+<div class="section-title">
+    <h2>Parroquias</h2>
+  </div>
+<div class="container pt-5">
+    <div class="d-flex flex-wrap justify-content-around">
+        {% for p in context.parroquias %}
+        <div class="list-group-item shadow-lg text-center border-0 w-25 m-2 p-5" style="font-family: 'Julius Sans One', sans-serif;" aria-current="true">
+            <form method="POST" class="form-group" action="">
+                {% csrf_token%}
+                <input type="submit" class="h4 bg-white text-secondary border-0 p-2 m-3" id="category-item" value="{{ p |capfirst }}">
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+        
+{% endblock %}
+
+
+      
