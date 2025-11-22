@@ -1,1 +1,1 @@
-gunicorn emprendimientos.wsgi
+web: gunicorn gastronomia.wsgi
