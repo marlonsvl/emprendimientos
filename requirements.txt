@@ -20,3 +20,4 @@ openpyxl
 python-decouple==3.8
 legacy-cgi==2.6.4
 djoser
+django-templated-mail==1.1.1
