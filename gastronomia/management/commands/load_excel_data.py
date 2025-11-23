@@ -1,4 +1,4 @@
-import csv
+import openpyxl
 from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.core.exceptions import ValidationError
@@ -7,13 +7,13 @@ from gastronomia.models import Establecimiento
 
 
 class Command(BaseCommand):
-    help = 'Load Establecimiento data from a CSV file'
+    help = 'Load Establecimiento data from an Excel file'
 
     def add_arguments(self, parser):
         parser.add_argument(
-            'csv_file',
+            'excel_file',
             type=str,
-            help='Path to the CSV file to import'
+            help='Path to the Excel file to import'
         )
         parser.add_argument(
             '--clear',
@@ -26,88 +26,122 @@ class Command(BaseCommand):
             default=500,
             help='Batch size for bulk create (default: 500)'
         )
+        parser.add_argument(
+            '--sheet',
+            type=str,
+            default='Sheet1',
+            help='Name of the sheet to import (default: Sheet1)'
+        )
 
     def handle(self, *args, **options):
-        csv_file = options['csv_file']
+        excel_file = options['excel_file']
         batch_size = options['batch_size']
+        sheet_name = options['sheet']
         
         if options['clear']:
             Establecimiento.objects.all().delete()
-            self.stdout.write(self.style.WARNING('Cleared existing data'))
+            # Reset the auto-increment counter to 1
+            with connection.cursor() as cursor:
+                # For PostgreSQL
+                try:
+                    cursor.execute("ALTER SEQUENCE gastronomia_establecimiento_id_seq RESTART WITH 1;")
+                except:
+                    pass  # For other databases that don't use this syntax
+            self.stdout.write(self.style.WARNING('Cleared existing data and reset ID counter'))
 
         try:
-            with open(csv_file, 'r', encoding='utf-8-sig') as file:
-                reader = csv.DictReader(file)
-                
-                # Debug: Print actual column names
-                self.stdout.write(self.style.WARNING(f'CSV columns: {reader.fieldnames}'))
-                
-                created_count = 0
-                error_count = 0
-                batch = []
-                
-                for row_num, row in enumerate(reader, start=2):
-                    try:
-                        # Clean whitespace from row keys
-                        row = {k.strip() if k else k: v for k, v in row.items()}
-                        
-                        # Convert empty strings to appropriate defaults
-                        data = self._clean_row(row)
-                        
-                        # Create the Establecimiento instance
-                        establecimiento = Establecimiento(**data)
-                        batch.append(establecimiento)
-                        
-                        # Bulk create when batch reaches batch_size
-                        if len(batch) >= batch_size:
-                            Establecimiento.objects.bulk_create(batch, ignore_conflicts=False)
-                            created_count += len(batch)
-                            self.stdout.write(f'Created {created_count} records so far...')
-                            batch = []
-                            
-                            # Clear database connections to prevent memory issues
-                            connection.close()
-                        
-                    except Exception as e:
-                        error_count += 1
-                        self.stdout.write(
-                            self.style.ERROR(f'\nError in row {row_num}: {str(e)}')
-                        )
-                        self.stdout.write(
-                            self.style.ERROR(f'Error type: {type(e).__name__}')
-                        )
-                        import traceback
-                        self.stdout.write(
-                            self.style.ERROR(f'Traceback: {traceback.format_exc()}')
-                        )
-                        continue
-                
-                # Create remaining records in batch
-                if batch:
-                    Establecimiento.objects.bulk_create(batch, ignore_conflicts=False)
-                    created_count += len(batch)
-                
+            # Load the Excel workbook
+            wb = openpyxl.load_workbook(excel_file)
+            
+            # Get the specified sheet
+            if sheet_name not in wb.sheetnames:
                 self.stdout.write(
-                    self.style.SUCCESS(
-                        f'\n✓ Successfully imported {created_count} records'
-                    )
+                    self.style.ERROR(f'Sheet "{sheet_name}" not found. Available sheets: {wb.sheetnames}')
                 )
-                if error_count > 0:
+                return
+            
+            ws = wb[sheet_name]
+            
+            # Get headers from the first row
+            headers = [cell.value for cell in ws[1]]
+            headers = [h.strip() if h else None for h in headers]
+            
+            self.stdout.write(self.style.WARNING(f'Excel columns: {headers}'))
+            
+            created_count = 0
+            error_count = 0
+            batch = []
+            
+            # Iterate through rows starting from row 2 (skip header)
+            for row_num, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+                try:
+                    # Create dictionary from headers and row values
+                    row_dict = {}
+                    for header, value in zip(headers, row):
+                        if header:
+                            row_dict[header] = value
+                    
+                    # Convert empty strings to appropriate defaults
+                    data = self._clean_row(row_dict)
+                    
+                    # Create the Establecimiento instance
+                    establecimiento = Establecimiento(**data)
+                    batch.append(establecimiento)
+                    
+                    # Bulk create when batch reaches batch_size
+                    if len(batch) >= batch_size:
+                        Establecimiento.objects.bulk_create(batch, ignore_conflicts=False)
+                        created_count += len(batch)
+                        self.stdout.write(f'Created {created_count} records so far...')
+                        batch = []
+                        
+                        # Clear database connections to prevent memory issues
+                        connection.close()
+                    
+                except Exception as e:
+                    error_count += 1
                     self.stdout.write(
-                        self.style.WARNING(f'{error_count} rows had errors')
+                        self.style.ERROR(f'\nError in row {row_num}: {str(e)}')
                     )
+                    self.stdout.write(
+                        self.style.ERROR(f'Error type: {type(e).__name__}')
+                    )
+                    import traceback
+                    self.stdout.write(
+                        self.style.ERROR(f'Traceback: {traceback.format_exc()}')
+                    )
+                    continue
+            
+            # Create remaining records in batch
+            if batch:
+                Establecimiento.objects.bulk_create(batch, ignore_conflicts=False)
+                created_count += len(batch)
+            
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f'\n✓ Successfully imported {created_count} records'
+                )
+            )
+            if error_count > 0:
+                self.stdout.write(
+                    self.style.WARNING(f'{error_count} rows had errors')
+                )
                     
         except FileNotFoundError:
             self.stdout.write(
-                self.style.ERROR(f'File not found: {csv_file}')
+                self.style.ERROR(f'File not found: {excel_file}')
             )
         except Exception as e:
             self.stdout.write(
                 self.style.ERROR(f'Unexpected error: {str(e)}')
             )
+            import traceback
+            self.stdout.write(
+                self.style.ERROR(f'Traceback: {traceback.format_exc()}')
+            )
 
     def _clean_row(self, row):
-        """Convert CSV row data to appropriate types"""
+        """Convert Excel row data to appropriate types"""
         
         def safe_get(key):
             """Safely get value from row"""
@@ -204,8 +238,6 @@ class Command(BaseCommand):
                 self.style.ERROR(f'Error in _clean_row: {str(e)}')
             )
             raise
-        
-        return cleaned
 
     def _parse_urls(self, urls_string):
         """Parse comma-separated URLs into a list"""

@@ -79,6 +79,7 @@ CORS_ALLOW_HEADERS = [
 ALLOWED_HOSTS = ['*']
 
 # Security settings for production
+
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
