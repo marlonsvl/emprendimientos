@@ -70,47 +70,47 @@
         }
         .brand-name {
             font-weight: bold;
-            color: #667eea;
+            color: #c6cadc;
         }
     </style>
 </head>
 <body>
     <div class="email-container">
         <div class="header">
-            <h1>Welcome to <span class="brand-name">{{ site_name }}</span>!</h1>
+            <h1>Bienvenido a <span class="brand-name">{{ site_name }}</span>!</h1>
         </div>
         
         <div class="content">
             <p class="welcome-text">
-                Hi <strong>{{ user.get_full_name|default:user.username }}</strong>,
+                Hola <strong>{{ user.get_full_name|default:user.username }}</strong>,
             </p>
             
-            <p>Thank you for joining our community! We're excited to have you on board.</p>
+            <p>¡Gracias por unirte a nuestra comunidad! Nos entusiasma tenerte a bordo.</p>
             
-            <p>To complete your registration and start exploring all our features, please activate your account by clicking the button below:</p>
+            <p>Para completar su registro y comenzar a explorar todas nuestras funciones, active su cuenta haciendo clic en el botón a continuación:</p>
             
             <div style="text-align: center; margin: 30px 0;">
                 <a href="{{ protocol }}://{{ domain }}/{{ url }}" class="activation-button">
-                    Activate My Account
+                    Activar mi cuenta
                 </a>
             </div>
             
             <div class="security-notice">
-                <strong>Security Notice:</strong> This activation link will expire in 24 hours for your security. If you didn't create an account with us, please ignore this email.
+                <strong>Aviso de seguridad:</strong> Por su seguridad, este enlace de activación caducará en 24 horas. Si no creó una cuenta con nosotros, ignore este correo electrónico.
             </div>
             
-            <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+            <p>Si el botón no funciona, puedes copiar y pegar este enlace en tu navegador:</p>
             <p style="word-break: break-all; color: #667eea; font-size: 14px;">
                 {{ protocol }}://{{ domain }}/{{ url }}
             </p>
             
-            <p>Welcome aboard!<br>
-            <strong>The {{ site_name }} Team</strong></p>
+            <p>¡Bienvenido a bordo!<br>
+            <strong>El equipo de {{ site_name }}</strong></p>
         </div>
         
         <div class="footer">
-            <p>&copy; 2024 {{ site_name }}. All rights reserved.</p>
-            <p>If you have any questions, feel free to contact our support team.</p>
+            <p>&copy; 2025 {{ site_name }}. Todos los derechos reservados.</p>
+            <p>Si tiene alguna pregunta, no dude en ponerse en contacto con nuestro equipo de soporte.</p>
         </div>
     </div>
 </body>
