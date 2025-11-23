@@ -40,6 +40,7 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 #DEBUG = True
 
 CORS_ALLOWED_ORIGINS = [
+    'https://emprendimientos-5xzh.onrender.com',
     'http://localhost:3000',
     'http://localhost:8080',
     'http://localhost:5000',
@@ -84,12 +85,19 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to access CSRF token
+    CSRF_COOKIE_SAMESITE = 'Lax'  # Allow activation links from emails
     SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_SECURITY_POLICY = {
-        "default-src": ("'self'", "vercel.live"),
-    }
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-
+# CSRF trusted origins for Render
+CSRF_TRUSTED_ORIGINS = [
+    'https://emprendimientos-5xzh.onrender.com',
+    'https://*.onrender.com',
+]
 
 
 STATICFILES_DIRS = [
