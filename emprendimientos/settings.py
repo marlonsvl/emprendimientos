@@ -39,6 +39,15 @@ SECRET_KEY = os.getenv("SECRET_KEY", "asdf567&908-ADDF34")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 #DEBUG = True
 
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'http://localhost:5000',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:8080',
+    'http://127.0.0.1:5000',
+]
+
 # Allow credentials (needed for cookies/sessions)
 CORS_ALLOW_CREDENTIALS = True
 

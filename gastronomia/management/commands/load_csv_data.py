@@ -19,42 +19,72 @@ class Command(BaseCommand):
             action='store_true',
             help='Clear existing data before importing'
         )
+        parser.add_argument(
+            '--batch-size',
+            type=int,
+            default=500,
+            help='Batch size for bulk create (default: 500)'
+        )
 
     def handle(self, *args, **options):
         csv_file = options['csv_file']
+        batch_size = options['batch_size']
         
         if options['clear']:
             Establecimiento.objects.all().delete()
             self.stdout.write(self.style.WARNING('Cleared existing data'))
 
         try:
-            with open(csv_file, 'r', encoding='utf-8') as file:
+            with open(csv_file, 'r', encoding='utf-8-sig') as file:
                 reader = csv.DictReader(file)
+                
+                # Debug: Print actual column names
+                self.stdout.write(self.style.WARNING(f'CSV columns: {reader.fieldnames}'))
                 
                 created_count = 0
                 error_count = 0
+                batch = []
                 
-                for row_num, row in enumerate(reader, start=2):  # Start at 2 (header is row 1)
+                for row_num, row in enumerate(reader, start=2):
                     try:
+                        # Clean whitespace from row keys
+                        row = {k.strip(): v for k, v in row.items()}
+                        
                         # Convert empty strings to appropriate defaults
                         data = self._clean_row(row)
                         
                         # Create the Establecimiento instance
                         establecimiento = Establecimiento(**data)
-                        establecimiento.save()
+                        batch.append(establecimiento)
                         
-                        created_count += 1
+                        # Bulk create when batch reaches batch_size
+                        if len(batch) >= batch_size:
+                            Establecimiento.objects.bulk_create(batch, ignore_conflicts=False)
+                            created_count += len(batch)
+                            self.stdout.write(f'Created {created_count} records so far...')
+                            batch = []
+                            
+                            # Clear database connections to prevent memory issues
+                            connection.close()
                         
                     except (ValidationError, ValueError, KeyError) as e:
                         error_count += 1
                         self.stdout.write(
                             self.style.ERROR(f'Error in row {row_num}: {str(e)}')
                         )
+                        self.stdout.write(
+                            self.style.ERROR(f'Row data: {row}')
+                        )
                         continue
+                
+                # Create remaining records in batch
+                if batch:
+                    Establecimiento.objects.bulk_create(batch, ignore_conflicts=False)
+                    created_count += len(batch)
                 
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f'\nSuccessfully imported {created_count} records'
+                        f'\n✓ Successfully imported {created_count} records'
                     )
                 )
                 if error_count > 0:
@@ -66,25 +96,46 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.ERROR(f'File not found: {csv_file}')
             )
+        except Exception as e:
+            self.stdout.write(
+                self.style.ERROR(f'Unexpected error: {str(e)}')
+            )
 
     def _clean_row(self, row):
         """Convert CSV row data to appropriate types"""
         
         def to_int(value):
-            return int(value) if value and value.strip() else 0
+            if not value or not str(value).strip():
+                return 0
+            try:
+                return int(float(value))
+            except (ValueError, TypeError):
+                return 0
         
         def to_decimal(value):
-            return Decimal(value) if value and value.strip() else Decimal('0.00')
+            if not value or not str(value).strip():
+                return Decimal('0.00')
+            try:
+                return Decimal(str(value))
+            except:
+                return Decimal('0.00')
         
         def to_string(value):
-            return value.strip() if value else ''
+            return str(value).strip() if value else ''
+        
+        # Debug: Show what value we're getting for nombre
+        nombre_value = row.get('nombre', '')
+        if not nombre_value or not str(nombre_value).strip():
+            self.stdout.write(
+                self.style.WARNING(f'WARNING: nombre is empty. Available keys: {list(row.keys())}')
+            )
         
         cleaned = {
             'nombre': to_string(row.get('nombre', '')),
             'parroquia': to_string(row.get('parroquia', '')),
             'sector': to_string(row.get('sector', '')),
             'telefono': to_string(row.get('telefono', '')),
-            'email': to_string(row.get('email', '')),
+            'email': to_string(row.get('email', '')) or 'noemail@example.com',
             'propietario': to_string(row.get('propietario', '')),
             'tipo_turismo': to_string(row.get('tipo_turismo', 'No especificado')),
             'experiencia': to_int(row.get('experiencia', 0)),
@@ -137,6 +188,6 @@ class Command(BaseCommand):
 
     def _parse_urls(self, urls_string):
         """Parse comma-separated URLs into a list"""
-        if not urls_string or not urls_string.strip():
+        if not urls_string or not str(urls_string).strip():
             return []
-        return [url.strip() for url in urls_string.split(',') if url.strip()]
+        return [url.strip() for url in str(urls_string).split(',') if url.strip()]
