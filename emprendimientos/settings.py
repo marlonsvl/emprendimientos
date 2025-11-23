@@ -40,7 +40,7 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 #DEBUG = True
 
 CORS_ALLOWED_ORIGINS = [
-    'https://'+DOMAIN,
+    'https://'+os.getenv("DOMAIN"),
     'http://localhost:3000',
     'http://localhost:8080',
     'http://localhost:5000',
@@ -95,7 +95,7 @@ if not DEBUG:
 
 # CSRF trusted origins for Render
 CSRF_TRUSTED_ORIGINS = [
-    'https://'+DOMAIN,
+    'https://'+os.getenv("DOMAIN"),
     'https://*.onrender.com',
 ]
 
