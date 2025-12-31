@@ -40,7 +40,7 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 #DEBUG = True
 
 CORS_ALLOWED_ORIGINS = [
-    #'https://'+os.getenv("DOMAIN"),
+    'https://'+os.getenv("DOMAIN"),
     'http://localhost:3000',
     'http://localhost:8080',
     'http://localhost:5000',
@@ -94,10 +94,10 @@ if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # CSRF trusted origins for Render
-#CSRF_TRUSTED_ORIGINS = [
-#    'https://'+os.getenv("DOMAIN"),
-#    'https://*.onrender.com',
-#]
+CSRF_TRUSTED_ORIGINS = [
+    'https://'+os.getenv("DOMAIN"),
+    'https://*.onrender.com',
+]
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'gastronomia/static'),
@@ -127,8 +127,8 @@ INSTALLED_APPS = [
     'djoser',
     'rest_framework',
     'rest_framework.authtoken',
-    'gastronomia',
-    #'gastronomia.apps.GastronomiaConfig',
+    #'gastronomia',
+    'gastronomia.apps.GastronomiaConfig',
     
     
 ]
@@ -276,26 +276,26 @@ WSGI_APPLICATION = 'emprendimientos.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'emps',
-        'USER': 'postgres',
-        'PASSWORD': 'marlon',
-        'HOST': 'localhost',
-        'PORT': '',
-    }   
-}
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#        'NAME': 'emps',
+#        'USER': 'postgres',
+#        'PASSWORD': 'marlon',
+#        'HOST': 'localhost',
+#        'PORT': '',
+#    }   
+#}
 
 #db_from_env = dj_database_url.config(conn_max_age=600)
 #DATABASES['default'].update(db_from_env)
-#DATABASES = {
-#    "default": dj_database_url.config(
-#        default=os.getenv("DATABASE_URL"),
-#        conn_max_age=600,
-#        ssl_require=True
-#    )
-#}
+DATABASES = {
+    "default": dj_database_url.config(
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True
+    )
+}
 
 
 
