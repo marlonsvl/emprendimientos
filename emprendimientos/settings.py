@@ -99,7 +99,6 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
 ]
 
-
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'gastronomia/static'),
 ]
