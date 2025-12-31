@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
 
 #from django.contrib.auth.models import User
-
+User._meta.get_field("email")._unique = True
 ## https://stackoverflow.com/questions/19130942/whats-the-best-way-to-store-a-phone-number-in-django-models
 from phonenumber_field.modelfields import PhoneNumberField
 
