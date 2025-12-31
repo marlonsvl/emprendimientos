@@ -8,6 +8,8 @@ from phonenumber_field.modelfields import PhoneNumberField
 from djoser.serializers import UserCreateSerializer, UserSerializer as DjoserUserSerializer
 from django.contrib.auth.models import User
 import uuid
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 
 class EstablecimientoSerializer(serializers.HyperlinkedModelSerializer):
@@ -211,7 +213,7 @@ class UserCommentSerializer(serializers.Serializer):
     return queryset
 
 
-
+"""
 class CustomUserCreateSerializer(UserCreateSerializer):
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
@@ -250,6 +252,60 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
         # Create UserProfile (avoid duplicating if signal also creates it)
         UserProfile.objects.create(user=user, first_name=first_name, last_name=last_name)
+
+        return user
+"""
+class CustomUserCreateSerializer(UserCreateSerializer):
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+    re_password = serializers.CharField(write_only=True, required=True)
+
+    class Meta(UserCreateSerializer.Meta):
+        model = User
+        fields = (
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "password",
+            "re_password",
+        )
+
+    # ✅ EMAIL UNIQUENESS VALIDATION
+    def validate_email(self, value):
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def validate(self, attrs):
+        re_password = attrs.pop("re_password", None)
+        if not re_password or attrs.get("password") != re_password:
+            raise serializers.ValidationError({"password": "Passwords do not match."})
+        return attrs
+
+    def create(self, validated_data):
+        # Auto-generate username if missing
+        if not validated_data.get("username"):
+            base = validated_data.get("email", "").split("@")[0]
+            validated_data["username"] = f"{base}_{str(uuid.uuid4())[:8]}"
+
+        first_name = validated_data.pop("first_name", "")
+        last_name = validated_data.pop("last_name", "")
+
+        user = super().create(validated_data)
+
+        user.first_name = first_name
+        user.last_name = last_name
+        user.is_active = False
+        user.save()
+
+        # Create profile
+        UserProfile.objects.create(
+            user=user,
+            first_name=first_name,
+            last_name=last_name,
+        )
 
         return user
 
