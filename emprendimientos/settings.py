@@ -172,7 +172,7 @@ USE_HTTPS = config('USE_HTTPS')  # Set to True in production
 
 
 DJOSER = {
-    
+    "USER_EMAIL_UNIQUE": True,
     "SEND_ACTIVATION_EMAIL": True,
     "USER_CREATE_PASSWORD_RETYPE": True,       # expects "re_password" in the payload
     "PASSWORD_RESET_CONFIRM_URL": "password/reset/confirm/{uid}/{token}",
