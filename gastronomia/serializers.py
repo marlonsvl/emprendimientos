@@ -10,6 +10,7 @@ from django.contrib.auth.models import User
 import uuid
 from django.contrib.auth import get_user_model
 User = get_user_model()
+from rest_framework.validators import UniqueValidator
 
 
 class EstablecimientoSerializer(serializers.HyperlinkedModelSerializer):
@@ -256,6 +257,15 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         return user
 """
 class CustomUserCreateSerializer(UserCreateSerializer):
+    email = serializers.EmailField(
+        required=True,
+        validators=[
+            UniqueValidator(
+                queryset=User.objects.all(),
+                message="Ya existe una cuenta registrada con este email."
+            )
+        ]
+    )
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
     re_password = serializers.CharField(write_only=True, required=True)
