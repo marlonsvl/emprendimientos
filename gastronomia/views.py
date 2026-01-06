@@ -162,7 +162,7 @@ class UserProfileViewSet(viewsets.ViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    @action(detail=False, methods=['delete'])
+    
     def destroy(self, request, pk=None):
         user = request.user
         try:

@@ -22,7 +22,7 @@ urlpatterns = [
     path('api/establecimientos/<int:pk>/comments/', views.CommentViewSet.as_view(
         {'get': 'list', 'post': 'create', 'delete': 'destroy'})),
     
-    # Add this specific line for the current user
+    
     path('api/user-profile/me/', views.UserProfileViewSet.as_view({'delete': 'destroy'})),
 
     path('api/user-profiles/', views.UserProfileViewSet.as_view(
