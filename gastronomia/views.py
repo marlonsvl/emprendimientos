@@ -10,6 +10,7 @@ from rest_framework import status
 from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from rest_framework.pagination import PageNumberPagination
 
@@ -53,7 +54,7 @@ class EstablecimientoViewSet(viewsets.ModelViewSet):
     """
     #queryset = Establecimiento.objects.all().order_by('-precio_promedio')
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     
     serializer_class = EstablecimientoSerializer
     def get_queryset(self):
