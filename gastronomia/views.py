@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.decorators import action
 
 from rest_framework.pagination import PageNumberPagination
 
@@ -128,29 +129,7 @@ class NombresFilterView(viewsets.ModelViewSet):
 
 class UserProfileViewSet(viewsets.ViewSet):
     
-    # serializer_class = UserProfileSerializer
-    # permission_classes = [IsAuthenticated]  # Only authenticated users can access
-
-    # #def get_object(self):
-    # def get_queryset(self):
-    #     userProfile = UserProfile.objects.filter(user=self.request.user)
-    #     return userProfile
-
-    # def create(self, request, *args, **kwargs):
-    #     serializer = self.get_serializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save(user=request.user)  # Assuming you have authentication set up
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    # def patch(self, request, pk=None, **kwargs):
-    #     partial = kwargs.pop('partial', False)
-    #     instance = self.get_object()
-    #     serializer = self.get_serializer(instance, data=request.data, partial=partial)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     permission_classes = [IsAuthenticated]
 
@@ -182,6 +161,22 @@ class UserProfileViewSet(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Inside your UserProfileViewSet
+    def destroy(self, request, pk=None):
+        user = request.user
+        try:
+            # Deleting the user object triggers the CASCADE delete on UserProfile
+            user.delete()
+            return Response(
+                {"message": "Cuenta eliminada correctamente"}, 
+                status=status.HTTP_204_NO_CONTENT
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         
 

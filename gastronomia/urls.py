@@ -23,7 +23,7 @@ urlpatterns = [
         {'get': 'list', 'post': 'create', 'delete': 'destroy'})),
     
     path('api/user-profiles/', views.UserProfileViewSet.as_view(
-        {'get': 'list', 'post': 'create', 'patch': 'update',})),
+        {'get': 'list', 'post': 'create', 'patch': 'update','delete': 'destroy'})),
     
     path('api/establecimientos/<int:est_id>/comments/', views.EstablecimientoCommentsView.as_view()),
 
