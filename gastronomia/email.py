@@ -77,4 +77,66 @@ The {context['site_name']} Team
 
 class PasswordResetEmail(BaseEmailMessage):
     template_name = "email/password_reset_email.html"
+    def get_context_data(self):
+        context = super().get_context_data()
+        user = context.get("user")
+        
+        # Generate the password reset URL components
+        uid = utils.encode_uid(user.pk)
+        token = default_token_generator.make_token(user)
+        
+        # Build the complete context
+        context.update({
+            "user": user,
+            "uid": uid,
+            "token": token,
+            "url": djoser_settings.PASSWORD_RESET_CONFIRM_URL.format(uid=uid, token=token),
+            "domain": djoser_settings.DOMAIN,
+            "site_name": djoser_settings.SITE_NAME,
+            "protocol": "https" if getattr(settings, 'USE_HTTPS', False) else "http"
+        })
+        
+        return context
+
+    def get_subject(self):
+        return f"Reset your {djoser_settings.SITE_NAME} password"
+
+    def send(self, to, *args, **kwargs):
+        # Get the context
+        context = self.get_context_data()
+        
+        # Render both HTML and text versions
+        html_content = render_to_string(self.template_name, context)
+        text_content = f"""
+Password Reset for {context['site_name']}
+
+Hi {context['user'].get_full_name() or context['user'].username},
+
+We received a request to reset your password for your {context['site_name']} account.
+
+If you made this request, visit this link to reset your password:
+
+{context['protocol']}://{context['domain']}/{context['url']}
+
+This password reset link will expire in 1 hour for your security. If you didn't request this reset, please ignore this email and your password will remain unchanged.
+
+Best regards,
+The {context['site_name']} Team
+"""
+        
+        # Send the email with both versions
+        from django.core.mail import EmailMultiAlternatives
+        
+        subject = self.get_subject()
+        from_email = settings.DEFAULT_FROM_EMAIL
+        
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=from_email,
+            to=to if isinstance(to, list) else [to]
+        )
+        email.attach_alternative(html_content, "text/html")
+        
+        return email.send()
     
