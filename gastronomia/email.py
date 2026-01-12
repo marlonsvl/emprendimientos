@@ -76,5 +76,5 @@ The {context['site_name']} Team
 
 
 class PasswordResetEmail(BaseEmailMessage):
-    template_name = "email/password_reset_email_body.html"
+    template_name = "email/password_reset_email.html"
     
