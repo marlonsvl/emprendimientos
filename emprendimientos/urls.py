@@ -17,7 +17,7 @@ from posixpath import basename
 from django.contrib import admin
 from django.urls import include, path
 from gastronomia import views
-from gastronomia.views import ActivateUserView
+from gastronomia.views import ActivateUserView, PasswordResetConfirmView
 from rest_framework import routers
 
 
@@ -37,4 +37,8 @@ urlpatterns = [
     
     #path('auth/', include(('djoser.urls', 'djoser'), namespace='djoser')),
     path('auth/users/activation/<str:uid>/<str:token>/', ActivateUserView.as_view(), name='user-activation-link'),
+
+    path('password/reset/confirm/<str:uid>/<str:token>/', 
+         PasswordResetConfirmView.as_view(), 
+         name='password_reset_confirm'),
 ]

@@ -14,6 +14,10 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.decorators import action
 
 from rest_framework.pagination import PageNumberPagination
+from django.http import JsonResponse
+from django.contrib.auth import get_user_model
+from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth.tokens import default_token_generator
 
 
 
@@ -495,6 +499,8 @@ class CommentLikeViewSet(viewsets.ViewSet):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+User = get_user_model()
+
 class UserCommentView(APIView):
   def get(self, request, id):
     try:
@@ -544,3 +550,78 @@ class ActivateUserView(View):
             context = {"status": "error", "detail": response.text}
 
         return render(request, self.template_name, context)
+
+
+class PasswordResetConfirmView(APIView):
+    """
+    Custom view to handle password reset confirmation with HTML form
+    """
+    permission_classes = []
+    
+    def get(self, request, uid, token):
+        """Display the password reset form"""
+        try:
+            # Verify the token is valid
+            user_id = urlsafe_base64_decode(uid).decode()
+            user = User.objects.get(pk=user_id)
+            
+            if default_token_generator.check_token(user, token):
+                return render(request, 'email/password_reset_confirm.html', {
+                    'uid': uid,
+                    'token': token,
+                    'validlink': True,
+                })
+            else:
+                return render(request, 'email/password_reset_confirm.html', {
+                    'validlink': False,
+                    'error': 'El enlace de restablecimiento es inválido o ha expirado.'
+                })
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return render(request, 'email/password_reset_confirm.html', {
+                'validlink': False,
+                'error': 'El enlace de restablecimiento es inválido.'
+            })
+    
+    def post(self, request, uid, token):
+        """Handle password reset form submission"""
+        try:
+            user_id = urlsafe_base64_decode(uid).decode()
+            user = User.objects.get(pk=user_id)
+            
+            if not default_token_generator.check_token(user, token):
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'El enlace de restablecimiento es inválido o ha expirado.'
+                }, status=400)
+            
+            new_password = request.POST.get('new_password1')
+            confirm_password = request.POST.get('new_password2')
+            
+            # Validate passwords match
+            if new_password != confirm_password:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Las contraseñas no coinciden.'
+                }, status=400)
+            
+            # Validate password strength (optional - add your own validation)
+            if len(new_password) < 8:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'La contraseña debe tener al menos 8 caracteres.'
+                }, status=400)
+            
+            # Set the new password
+            user.set_password(new_password)
+            user.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Contraseña actualizada correctamente.'
+            })
+            
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return JsonResponse({
+                'success': False,
+                'error': 'Error al procesar la solicitud.'
+            }, status=400)
