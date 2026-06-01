@@ -81,6 +81,7 @@ class Establecimiento(models.Model):
     longitude = models.DecimalField(max_digits=9, decimal_places=6) # x
     latitude = models.DecimalField(max_digits=9, decimal_places=6) # y
     horario = models.CharField(max_length=200)
+    medio_pago = models.CharField(max_length=200)
     categoria = models.CharField(max_length=100)
     photo_url = models.URLField(default='https://picsum.photos/300/30', blank=True)
     video_url = models.URLField(blank=True, null=True)
