@@ -227,6 +227,7 @@ class Command(BaseCommand):
                 'longitude': to_decimal(safe_get('longitude')),
                 'latitude': to_decimal(safe_get('latitude')),
                 'horario': to_string(safe_get('horario')),
+                'medio_pago': to_string(safe_get('medio pago')),
                 'categoria': to_string(safe_get('categoria')),
                 'photo_url': to_string(safe_get('photo_url')) ,
                 'video_url': to_string(safe_get('video url')),
