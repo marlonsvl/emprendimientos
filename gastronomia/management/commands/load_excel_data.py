@@ -39,21 +39,23 @@ class Command(BaseCommand):
         sheet_name = options['sheet']
         
         if options['clear']:
-            try:
-                self.stdout.write(f'Record count before delete: {Establecimiento.objects.count()}')
-                Establecimiento.objects.all().delete()
-            except Exception as e:
-                self.stdout.write(self.style.ERROR(f'Delete failed: {type(e).__name__}: {str(e)}'))
-                return  # Stop here so you see the real error
-
-            # Reset the auto-increment counter
+            self.stdout.write(self.style.WARNING('Clearing existing data...'))
+            
             with connection.cursor() as cursor:
+                # For PostgreSQL (handles cascading and resets auto-increment IDs in one command)
                 try:
-                    cursor.execute("ALTER SEQUENCE gastronomia_establecimiento_id_seq RESTART WITH 1;")
-                except Exception as e:
-                    self.stdout.write(self.style.WARNING(f'Could not reset sequence: {e}'))
-
-            self.stdout.write(self.style.WARNING('Cleared existing data and reset ID counter'))
+                    cursor.execute("TRUNCATE TABLE gastronomia_establecimiento RESTART IDENTITY CASCADE;")
+                    self.stdout.write(self.style.SUCCESS('Cleared data and reset ID counter via TRUNCATE.'))
+                except Exception as sql_err:
+                    # Fallback for SQLite or databases that don't support CASCADE/RESTART IDENTITY
+                    self.stdout.write(self.style.WARNING(f'Truncate failed ({sql_err}), falling back to ORM delete...'))
+                    Establecimiento.objects.all().delete()
+                    
+                    # Try resetting sequence normally
+                    try:
+                        cursor.execute("ALTER SEQUENCE gastronomia_establecimiento_id_seq RESTART WITH 1;")
+                    except:
+                        pass
 
         try:
             # Load the Excel workbook
