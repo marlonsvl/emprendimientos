@@ -39,14 +39,20 @@ class Command(BaseCommand):
         sheet_name = options['sheet']
         
         if options['clear']:
-            Establecimiento.objects.all().delete()
-            # Reset the auto-increment counter to 1
+            try:
+                self.stdout.write(f'Record count before delete: {Establecimiento.objects.count()}')
+                Establecimiento.objects.all().delete()
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f'Delete failed: {type(e).__name__}: {str(e)}'))
+                return  # Stop here so you see the real error
+
+            # Reset the auto-increment counter
             with connection.cursor() as cursor:
-                # For PostgreSQL
                 try:
                     cursor.execute("ALTER SEQUENCE gastronomia_establecimiento_id_seq RESTART WITH 1;")
-                except:
-                    pass  # For other databases that don't use this syntax
+                except Exception as e:
+                    self.stdout.write(self.style.WARNING(f'Could not reset sequence: {e}'))
+
             self.stdout.write(self.style.WARNING('Cleared existing data and reset ID counter'))
 
         try:
